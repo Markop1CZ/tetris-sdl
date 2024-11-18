@@ -27,25 +27,36 @@ void board_clear() {
 }
 
 void board_render(SDL_Renderer *renderer) {
-    SDL_Rect r;
-    r.w = BLOCK_SIZE-2;
-    r.h = BLOCK_SIZE-2;
+    SDL_Rect g_r;
+    SDL_Rect b_r;
 
+    g_r.w = BLOCK_SIZE+1;
+    g_r.h = BLOCK_SIZE+1;
+    b_r.w = BLOCK_SIZE-3;
+    b_r.h = BLOCK_SIZE-3;
+    
     for (int y = 0; y < ROWS; y++) {
         for (int x = 0; x < COLUMNS; x++) {
-            if (game_board[y][x] != -1) {
+            //WIDTH-(COLUMNS*BLOCK_SIZE)
+            g_r.x = BOARD_X+x*BLOCK_SIZE;
+            g_r.y = y*BLOCK_SIZE;
+            b_r.x = g_r.x+2;
+            b_r.y = g_r.y+2;
+
+            SDL_SetRenderDrawColor(renderer, 0x80, 0x80, 0x80, 0x80);
+            SDL_RenderDrawRect(renderer, &g_r);
+
+             if (game_board[y][x] != -1) {
                 SDL_Color clr = COLORS[game_board[y][x]];
-                r.x = BOARD_X+x*BLOCK_SIZE;
-                r.y = y*BLOCK_SIZE;
                 SDL_SetRenderDrawColor(renderer, clr.r, clr.g, clr.b, clr.a);
-                SDL_RenderFillRect(renderer, &r);
-            }
+                SDL_RenderFillRect(renderer, &b_r);
+             }
         }
     }
 }
 
 void game_shuffle() {
-    board_clear();
+    //board_clear();
 }
 
 void game_init(SDL_Renderer *renderer) {
@@ -55,25 +66,16 @@ void game_init(SDL_Renderer *renderer) {
     button_set_size(&btn_leave, 170, 70);
     button_set_pos(&btn_leave, 457, 570);
     board_clear();
+
+    text_create(&text_score, renderer, font_score, "0", white);
+    text_score.rect.x = 500;
+    text_score.rect.y = 150;
 }
 
 void game_render(SDL_Renderer *renderer) {
     button_render(&btn_leave, renderer);
     button_render(&btn_leave, renderer);
-
-    SDL_Rect r;
-    r.w = BLOCK_SIZE+1;
-    r.h = BLOCK_SIZE+1;
-
-    SDL_SetRenderDrawColor(renderer, 0x80, 0x80, 0x80, 0x80);
-    for (int y = 0; y < ROWS; y++) {
-        for (int x = 0; x < COLUMNS; x++) {
-            //WIDTH-(COLUMNS*BLOCK_SIZE)
-            r.x = BOARD_X+x*BLOCK_SIZE;
-            r.y = y*BLOCK_SIZE;
-            SDL_RenderDrawRect(renderer, &r);
-        }
-    }
+    text_render(&text_score, renderer);
 
     board_render(renderer);
 }
