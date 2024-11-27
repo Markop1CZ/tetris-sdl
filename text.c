@@ -1,5 +1,6 @@
 #include "text.h"
 #include "tetris.h"
+
 #include "sdl2/SDL.h"
 #include "sdl2/SDL_ttf.h"
 

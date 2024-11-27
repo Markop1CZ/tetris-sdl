@@ -1,10 +1,12 @@
 #define SDL_MAIN_HANDLED
 
+#include <stdbool.h>
 #include "tetris.h"
 #include "menu.h"
 #include "game.h"
 #include "text.h"
 #include "button.h"
+
 #include "sdl2/SDL.h"
 #include "sdl2/SDL_mouse.h"
 #include "sdl2/SDL_ttf.h"
@@ -38,12 +40,15 @@ int main() {
     Uint32 mouse_state;
     int mouse_x;
     int mouse_y;
+    int num_keys;
+    const bool *key_state;
     SDL_Event event;
 
     while (running) {
         int t1 = SDL_GetTicks();
 
         mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
+        key_state = SDL_GetKeyboardState(&num_keys);
         while(SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
@@ -63,8 +68,7 @@ int main() {
                 menu_render(renderer);
                 break;
             case STATE_GAME:
-                game_shuffle();
-                game_update(&game_state, mouse_state, mouse_x, mouse_y);
+                game_update(&game_state, mouse_state, mouse_x, mouse_y, num_keys, key_state);
                 game_render(renderer);
                 break;
         }

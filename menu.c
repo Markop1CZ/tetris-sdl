@@ -1,6 +1,8 @@
 #include "menu.h"
 #include "tetris.h"
 #include "button.h"
+#include "game.h"
+
 #include "sdl2/SDL.h"
 
 void menu_init(SDL_Renderer *renderer) {
@@ -31,8 +33,10 @@ void menu_update(enum state *next_state, Uint32 mouse_state, int x, int y) {
     button_update(&btn_play, mouse_state, x, y);
     button_update(&btn_quit, mouse_state, x, y);
 
-    if (btn_play.state & BUTTON_PRESSED)
+    if (btn_play.state & BUTTON_PRESSED) {
+        game_reset();
         *next_state = STATE_GAME;
+    }
     if (btn_quit.state & BUTTON_PRESSED)
         *next_state = STATE_QUIT;
 }
