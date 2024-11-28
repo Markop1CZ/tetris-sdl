@@ -1,6 +1,7 @@
-#include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 #include "game.h"
 #include "tetris.h"
 #include "button.h"
@@ -153,6 +154,21 @@ void falling_piece_land() {
     board_check_rows();
 }
 
+void falling_piece_rotate() {
+    int originY = falling_piece.coords[0][falling_piece.origin]; 
+    int originX = falling_piece.coords[1][falling_piece.origin];
+
+    for (int i = 0; i < 4; i++) {
+        if (i != falling_piece.origin) {
+            int y = falling_piece.coords[0][i];
+            int x = falling_piece.coords[1][i];
+
+            falling_piece.coords[0][i] = originX - x + originY;;
+            falling_piece.coords[1][i] = y - originY + originX;
+        }
+    }
+}
+
 void falling_piece_update(int num_keys, const bool *key_state) {
     int falling = 1;
     int dx = 0;
@@ -266,6 +282,12 @@ void game_update(enum state *next_state, Uint32 mouse_state, int x, int y, int n
 
     if (btn_leave.state & BUTTON_PRESSED)
         *next_state = STATE_MENU;
+}
+
+void game_keydown(int key) {
+    if (key == SDL_SCANCODE_R) {
+        falling_piece_rotate();
+    }
 }
 
 void game_destroy() {

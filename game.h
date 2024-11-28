@@ -11,6 +11,7 @@ T_Text text_score;
 
 void game_init(SDL_Renderer *renderer);
 void game_update(enum state *next_state, Uint32 mouse, int x, int y, int num_keys, const bool *key_state);
+void game_keydown(int key);
 void game_render(SDL_Renderer *renderer);
 void game_destroy();
 

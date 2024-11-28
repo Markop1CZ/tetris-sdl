@@ -48,11 +48,14 @@ int main() {
         int t1 = SDL_GetTicks();
 
         mouse_state = SDL_GetMouseState(&mouse_x, &mouse_y);
-        key_state = SDL_GetKeyboardState(&num_keys);
+        key_state = (bool*)SDL_GetKeyboardState(&num_keys);
         while(SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
                 break;
+            }
+            if (event.type == SDL_KEYDOWN && game_state == STATE_GAME) {
+                game_keydown(event.key.keysym.scancode);
             }
         }
 
