@@ -19,8 +19,6 @@ void button_create(T_Button *button, SDL_Renderer *renderer, TTF_Font *font, con
 void button_center_text(T_Button *button) {
     button->text.rect.x = button->rect.x + (int)(button->rect.w-button->text.rect.w)/2;
     button->text.rect.y = button->rect.y + (int)(button->rect.h-button->text.rect.h)/2;
-    
-    //printf("button: %d %d %d %d txt: %d %d %d %d\n", button->rect.x, button->rect.y, button->rect.w, button->rect.h, button->text.rect.x, button->text.rect.y, button->text.rect.w, button->text.rect.h);
 }
 
 void button_set_pos(T_Button *button, int x, int y) {

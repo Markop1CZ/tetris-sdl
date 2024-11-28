@@ -8,6 +8,7 @@
 
 T_Button btn_leave;
 T_Text text_score;
+T_Text text_game_over;
 
 void game_init(SDL_Renderer *renderer);
 void game_update(enum state *next_state, Uint32 mouse, int x, int y, int num_keys, const bool *key_state);
