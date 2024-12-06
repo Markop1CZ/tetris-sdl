@@ -44,7 +44,7 @@ void button_render(T_Button *button, SDL_Renderer *renderer) {
     text_render(&button->text, renderer);
 }
 
-void button_update(T_Button *button, Uint32 state, int x, int y) {
+void button_update(T_Button *button, Uint32 state, Uint32 state_last, int x, int y) {
     SDL_Point p;
     p.x = x;
     p.y = y;
@@ -53,7 +53,7 @@ void button_update(T_Button *button, Uint32 state, int x, int y) {
 
     if (SDL_PointInRect(&p, &button->rect)) {
         button->state |= BUTTON_HOVER;
-        if (state & SDL_BUTTON(1)) {
+        if (state & SDL_BUTTON(1) && !(state_last & SDL_BUTTON(1))) {
             button->state |= BUTTON_PRESSED;
         }      
     }

@@ -36,8 +36,9 @@ int main() {
     game_init(renderer);
     
     enum state game_state = STATE_MENU;
-    int running = 1;
+    bool running = true;
     Uint32 mouse_state;
+    Uint32 mouse_state_last = 0;
     int mouse_x;
     int mouse_y;
     int num_keys;
@@ -54,8 +55,8 @@ int main() {
                 running = 0;
                 break;
             }
-            if (event.type == SDL_KEYDOWN && game_state == STATE_GAME) {
-                game_keydown(event.key.keysym.scancode);
+            if (game_state == STATE_GAME && event.type == SDL_KEYDOWN) {
+                game_keydown(event.key);
             }
         }
 
@@ -67,11 +68,11 @@ int main() {
                 running = 0;
                 break;
             case STATE_MENU:
-                menu_update(&game_state, mouse_state, mouse_x, mouse_y);
+                menu_update(&game_state, mouse_state, mouse_state_last, mouse_x, mouse_y);
                 menu_render(renderer);
                 break;
             case STATE_GAME:
-                game_update(&game_state, mouse_state, mouse_x, mouse_y, num_keys, key_state);
+                game_update(&game_state, mouse_state, mouse_state_last, mouse_x, mouse_y, num_keys, key_state);
                 game_render(renderer);
                 break;
         }
@@ -83,6 +84,8 @@ int main() {
         if (delta < 1000/TARGET_FPS) {
             SDL_Delay(1000/TARGET_FPS - delta);
         }
+
+        mouse_state_last = mouse_state;
     }
 
     text_destroy_fonts();

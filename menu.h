@@ -11,7 +11,7 @@ T_Button btn_play;
 T_Button btn_quit;
 
 void menu_init(SDL_Renderer *renderer);
-void menu_update(enum state *next_state, Uint32 mouse, int x, int y);
+void menu_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_last, int x, int y);
 void menu_render(SDL_Renderer *renderer);
 void menu_destroy();
 

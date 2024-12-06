@@ -17,7 +17,7 @@ void button_create(T_Button *button, SDL_Renderer *renderer, TTF_Font *font, con
 void button_render(T_Button *button, SDL_Renderer *renderer);
 void button_set_pos(T_Button *button, int x, int y);
 void button_set_size(T_Button *button, int w, int h);
-void button_update(T_Button *button, Uint32 mouse_state, int x, int y);
+void button_update(T_Button *button, Uint32 mouse_state, Uint32 mouse_staet_last, int x, int y);
 void button_destroy(T_Button *button);
 
 #endif /*BUTTON_H*/

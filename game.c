@@ -8,11 +8,19 @@
 #include "button.h"
 
 #include "sdl2/SDL.h"
+#include "sdl2/SDL_events.h"
 #include "sdl2/SDL_scancode.h"
 
 #define BOARD_X 75
 #define SCORE_CLEAR 100
 #define SCORE_MULTIPLIER 1.25f
+#define FALL_DURATION 0.5f
+
+T_Button btn_leave;
+T_Button btn_resume;
+T_Text text_score;
+T_Text text_game_over;
+T_Text text_paused;
 
 SDL_Color COLORS[7] = {{0x00, 0xFF, 0xFF, 0xFF},  // cyan   0
                        {0xFF, 0xFF, 0x00, 0xFF},  // yellow 1
@@ -40,17 +48,21 @@ T_FallingPiece piece_j = {{{2, 0}, {2, 1}, {1, 1}, {0, 1}}, 2, 2};
 T_FallingPiece piece_a = {{{0, 0}, {0, 1}, {1, 1}, {0, 2}}, 1, 5};
 
 T_FallingPiece falling_piece;
-int game_over = 0;
+T_FallingPiece piece_next;
+
+bool game_paused = false;
+bool game_over = false;
+bool score_changed;
+
 int score = 0;
-int score_changed;
-int t_fall = 0;
-int t_move = 0;
+int time_fall = 0;
+int time_move = 0;
 int game_board[ROWS][COLUMNS];
 
 void board_clear() {
     for (int y = 0; y < ROWS; y++) {
         for (int x = 0; x < COLUMNS; x++) {
-            game_board[y][x] = -1;//rand() % 7;
+            game_board[y][x] = -1;
         }
     }
 }
@@ -58,7 +70,6 @@ void board_clear() {
 void board_render(SDL_Renderer *renderer) {
     for (int y = 0; y < ROWS; y++) {
         for (int x = 0; x < COLUMNS; x++) {
-            //WIDTH-(COLUMNS*BLOCK_SIZE)
             g_r.x = x*BLOCK_SIZE + BOARD_X;
             g_r.y = y*BLOCK_SIZE;
             b_r.x = g_r.x + 2;
@@ -68,8 +79,8 @@ void board_render(SDL_Renderer *renderer) {
             SDL_RenderDrawRect(renderer, &g_r);
 
              if (game_board[y][x] != -1) {
-                SDL_Color clr = COLORS[game_board[y][x]];
-                SDL_SetRenderDrawColor(renderer, clr.r, clr.g, clr.b, clr.a);
+                SDL_Color color = COLORS[game_board[y][x]];
+                SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
                 SDL_RenderFillRect(renderer, &b_r);
              }
         }
@@ -77,7 +88,6 @@ void board_render(SDL_Renderer *renderer) {
 }
 
 void board_clear_row(int y) {
-    // clear row
     for (int x = 0; x < COLUMNS; x++) {
         game_board[y][x] = -1;
     }
@@ -93,6 +103,7 @@ void board_check_rows() {
     int x;
     int y;
     int cleared = 0;
+
     for (y = 0; y < ROWS; y++) {
         for (x = 0; x < COLUMNS; x++) {
             if (game_board[y][x] == -1)
@@ -157,45 +168,59 @@ void falling_piece_rotate() {
     memcpy(&falling_piece, &tmp, sizeof(T_FallingPiece));
 }
 
-void falling_piece_spawn() {
+void set_random_piece(T_FallingPiece *piece) {
     switch (rand() % 7) {
         case 0:
-            memcpy(&falling_piece, &piece_o, sizeof(T_FallingPiece));
+            memcpy(piece, &piece_o, sizeof(T_FallingPiece));
             break;
         case 1:
-            memcpy(&falling_piece, &piece_i, sizeof(T_FallingPiece));
+            memcpy(piece, &piece_i, sizeof(T_FallingPiece));
             break;
         case 2:
-            memcpy(&falling_piece, &piece_s, sizeof(T_FallingPiece));
+            memcpy(piece, &piece_s, sizeof(T_FallingPiece));
             break;
         case 3:
-            memcpy(&falling_piece, &piece_z, sizeof(T_FallingPiece));
+            memcpy(piece, &piece_z, sizeof(T_FallingPiece));
             break;
         case 4:
-            memcpy(&falling_piece, &piece_l, sizeof(T_FallingPiece));
+            memcpy(piece, &piece_l, sizeof(T_FallingPiece));
             break;
         case 5:
-            memcpy(&falling_piece, &piece_j, sizeof(T_FallingPiece));
+            memcpy(piece, &piece_j, sizeof(T_FallingPiece));
             break;
         case 6:
-            memcpy(&falling_piece, &piece_a, sizeof(T_FallingPiece));
+            memcpy(piece, &piece_a, sizeof(T_FallingPiece));
             break;
     }
+}
+
+void falling_piece_spawn() {
+    memcpy(&falling_piece, &piece_next, sizeof(T_FallingPiece));
+
+    set_random_piece(&piece_next);
 
     falling_piece_transform(0, 4);
 
     if (falling_piece_check_collision()) {
-        game_over = 1;
+        game_over = true;
     }
 }
 
-void falling_piece_render(SDL_Renderer *renderer) {
+void falling_piece_render(SDL_Renderer *renderer, T_FallingPiece *falling_piece, bool next) {
     for (int i = 0; i < 4; i++) {
-        b_r.y = falling_piece.coords[i][0]*BLOCK_SIZE + 2;
-        b_r.x = falling_piece.coords[i][1]*BLOCK_SIZE + BOARD_X + 2;
+        int y = falling_piece->coords[i][0];
+        int x = falling_piece->coords[i][1];
+
+        if (next) {
+            y += 9;
+            x += 13;
+        }
+
+        b_r.y = y*BLOCK_SIZE + 2;
+        b_r.x = x*BLOCK_SIZE + BOARD_X + 2;
         
-        SDL_Color clr = COLORS[falling_piece.color];
-        SDL_SetRenderDrawColor(renderer, clr.r, clr.g, clr.b, clr.a);
+        SDL_Color color = COLORS[falling_piece->color];
+        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
         SDL_RenderFillRect(renderer, &b_r);
     }
 }
@@ -216,13 +241,13 @@ void falling_piece_update(int num_keys, const bool *key_state) {
     int dy = 0;
 
     // move down every 0.5 seconds
-    if (++t_fall >= (int)TARGET_FPS/2) {
+    if (++time_fall >= (int)TARGET_FPS/2) {
         dy = 1;
-        t_fall = 0;
+        time_fall = 0;
     }
 
     // get input every 0.25 seconds
-    if (++t_move >= (int)TARGET_FPS/16) {
+    if (++time_move >= (int)TARGET_FPS/16) {
         if (key_state[SDL_SCANCODE_RIGHT]) {
             dx = 1;
         }
@@ -233,7 +258,7 @@ void falling_piece_update(int num_keys, const bool *key_state) {
             dy = 1;
         }
 
-        t_move = 0;
+        time_move = 0;
     }
 
     // check x
@@ -278,13 +303,67 @@ void score_text_update(SDL_Renderer *renderer) {
     text_create(&text_score, renderer, font_score, score_text, white);
 
     text_score.rect.x = 500;
-    text_score.rect.y = 150;
+    text_score.rect.y = 125;
+}
+
+void game_render(SDL_Renderer *renderer) {
+    if (game_paused) {
+        text_render(&text_paused, renderer);
+        button_render(&btn_resume, renderer);
+        button_render(&btn_leave, renderer);
+    }
+    else {
+        if (score_changed) 
+            score_text_update(renderer);
+        score_changed = 0;
+
+        board_render(renderer);
+        falling_piece_render(renderer, &falling_piece, false);
+        falling_piece_render(renderer, &piece_next, true);
+
+        text_render(&text_score, renderer);
+        
+        if (game_over)
+            text_render(&text_game_over, renderer);
+    }
+}
+
+void game_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_last, int x, int y, int num_keys, const bool *key_state) {
+    if (game_paused) {
+        button_update(&btn_leave, mouse_state, mouse_state_last, x, y);
+        if (btn_leave.state & BUTTON_PRESSED)
+            *next_state = STATE_MENU;
+
+        button_update(&btn_resume, mouse_state, mouse_state_last, x, y);
+        if (btn_resume.state & BUTTON_PRESSED)
+            game_paused = false;
+    }
+    else {
+        if (!game_over)
+            falling_piece_update(num_keys, key_state);
+    }
+}
+
+void game_keydown(SDL_KeyboardEvent key) {
+    if (!game_paused) {
+        if (key.keysym.scancode == SDL_SCANCODE_R && !(key.repeat)) {
+            falling_piece_rotate();
+        }
+    }
+
+    if (key.keysym.scancode == SDL_SCANCODE_ESCAPE && !(key.repeat)) {
+        game_paused = !(game_paused);
+        if (game_over)
+            game_paused = false;
+    }
 }
 
 void game_reset() {
+    set_random_piece(&piece_next);
     score = 0;
     score_changed = 1;
-    game_over = 0;
+    game_over = false;
+    game_paused = false;
     board_clear();
     falling_piece_spawn();
 }
@@ -292,12 +371,18 @@ void game_reset() {
 void game_init(SDL_Renderer *renderer) {
     srand(time(NULL));
 
+    button_create(&btn_resume, renderer, font_button, "Continue");
+    button_set_size(&btn_resume, 450, 80);
+    button_set_pos(&btn_resume, 110, 260);
+
     button_create(&btn_leave, renderer, font_button, "Quit");
-    button_set_size(&btn_leave, 170, 70);
-    button_set_pos(&btn_leave, 457, 570);
-    board_clear();
+    button_set_size(&btn_leave, 450, 80);
+    button_set_pos(&btn_leave, 110, 380);
 
     text_create(&text_game_over, renderer, font_title, "Game Over!", white);
+    text_create(&text_paused, renderer, font_title, "Paused...", white);
+
+    text_paused.rect.y = 60;
 
     score_text_update(renderer);
 
@@ -307,40 +392,10 @@ void game_init(SDL_Renderer *renderer) {
     b_r.h = BLOCK_SIZE-3;
 }
 
-void game_render(SDL_Renderer *renderer) {
-    if (score_changed) 
-        score_text_update(renderer);
-    score_changed = 0;
-
-    board_render(renderer);
-    falling_piece_render(renderer);
-
-    button_render(&btn_leave, renderer);
-    button_render(&btn_leave, renderer);
-    text_render(&text_score, renderer);
-    
-    if (game_over)
-        text_render(&text_game_over, renderer);
-}
-
-void game_update(enum state *next_state, Uint32 mouse_state, int x, int y, int num_keys, const bool *key_state) {
-    button_update(&btn_leave, mouse_state, x, y);
-
-    if (!game_over)
-        falling_piece_update(num_keys, key_state);
-
-    if (btn_leave.state & BUTTON_PRESSED)
-        *next_state = STATE_MENU;
-}
-
-void game_keydown(int key) {
-    if (key == SDL_SCANCODE_R) {
-        falling_piece_rotate();
-    }
-}
-
 void game_destroy() {
     button_destroy(&btn_leave);
+    button_destroy(&btn_resume);
     text_destroy(&text_score);
     text_destroy(&text_game_over);
+    text_destroy(&text_paused);
 }
