@@ -12,10 +12,10 @@ TTF_Font *font_score;
 void text_load_fonts() {
     TTF_Init();
 
-    font_title = TTF_OpenFont("OpenSans-ExtraBold.ttf", 72);
-    font_button = TTF_OpenFont("OpenSans-SemiBold.ttf", 42);
-    font_text = TTF_OpenFont("OpenSans-Regular.ttf", 26);
-    font_score = TTF_OpenFont("OpenSans-SemiBold.ttf", 52);
+    font_title = TTF_OpenFont("assets/OpenSans-ExtraBold.ttf", 72);
+    font_button = TTF_OpenFont("assets/OpenSans-SemiBold.ttf", 42);
+    font_text = TTF_OpenFont("assets/OpenSans-Regular.ttf", 26);
+    font_score = TTF_OpenFont("assets/OpenSans-SemiBold.ttf", 52);
 }
 
 void text_destroy_fonts() {

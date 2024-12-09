@@ -6,6 +6,10 @@
 #include <time.h>
 #include <math.h>
 
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
+
 #include "text.h"
 #include "tetris.h"
 #include "button.h"
@@ -201,6 +205,12 @@ void falling_piece_spawn() {
 
     if (falling_piece_check_collision()) {
         game_over = true;
+        
+        #ifdef EMSCRIPTEN
+        char script[64];
+        sprintf(script, "gameEnded(%d);", score);
+        emscripten_run_script(script);
+        #endif
     }
 }
 
@@ -342,8 +352,13 @@ void game_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_
 
     if (game_paused || game_over) {
         button_update(&btn_leave, mouse_state, mouse_state_last, x, y);
-        if (btn_leave.state & BUTTON_PRESSED)
+        if (btn_leave.state & BUTTON_PRESSED) {
             *next_state = STATE_MENU;
+
+            #ifdef EMSCRIPTEN
+            emscripten_run_script("gameQuit();");
+            #endif
+        }
     }
 }
 
@@ -369,6 +384,10 @@ void game_reset() {
     game_paused = false;
     board_clear();
     falling_piece_spawn();
+
+    #ifdef EMSCRIPTEN
+    emscripten_run_script("gameStarted();");
+    #endif
 }
 
 void game_init(SDL_Renderer *renderer) {

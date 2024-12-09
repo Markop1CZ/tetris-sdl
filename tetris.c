@@ -4,6 +4,10 @@
 
 #include <stdbool.h>
 
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
+
 #include "menu.h"
 #include "game.h"
 #include "text.h"
@@ -68,13 +72,21 @@ void game_loop() {
 
     SDL_RenderPresent(renderer);
 
+    #ifndef EMSCRIPTEN
     // FPS throttling
     int delta = SDL_GetTicks() - time_start;
     if (delta < 1000/TARGET_FPS) {
         SDL_Delay(1000/TARGET_FPS - delta);
     }
+    #endif
 
     mouse_state_last = mouse_state;
+
+    #ifdef EMSCRIPTEN
+    if (!(GAME_RUNNING)) {
+        emscripten_cancel_main_loop();
+    }
+    #endif
 }
 
 int main() {
@@ -94,9 +106,15 @@ int main() {
     menu_init(renderer);
     game_init(renderer);
     
+    #ifndef EMSCRIPTEN
     while (GAME_RUNNING) {
         game_loop();
     }
+    #endif
+
+    #ifdef EMSCRIPTEN
+    emscripten_set_main_loop(game_loop, 0, true);
+    #endif
 
     text_destroy_fonts();
     menu_destroy();

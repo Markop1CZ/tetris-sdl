@@ -1,1 +1,3 @@
-/build/tetris.exe
+/build-win32/tetris.exe
+/build-emscripten/tetris.wasm
+/build-emscripten/tetris.js
