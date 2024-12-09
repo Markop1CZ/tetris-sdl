@@ -1,20 +1,18 @@
+#include "game.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
 #include <math.h>
-#include "game.h"
+
+#include "text.h"
 #include "tetris.h"
 #include "button.h"
 
 #include "sdl2/SDL.h"
 #include "sdl2/SDL_events.h"
 #include "sdl2/SDL_scancode.h"
-
-#define BOARD_X 75
-#define SCORE_CLEAR 100
-#define SCORE_MULTIPLIER 1.25f
-#define FALL_DURATION 0.5f
 
 T_Button btn_leave;
 T_Button btn_resume;
@@ -30,8 +28,8 @@ SDL_Color COLORS[7] = {{0x00, 0xFF, 0xFF, 0xFF},  // cyan   0
                        {0xFF, 0xC0, 0xCB, 0xFF},  // pink   5
                        {0xFF, 0x7F, 0x00, 0xFF}}; // orange 6
 
-SDL_Rect g_r;
-SDL_Rect b_r;
+SDL_Rect rect_grid;
+SDL_Rect rect_block;
 
 typedef struct {
     int coords[4][2];
@@ -39,13 +37,13 @@ typedef struct {
     int color;
 } T_FallingPiece;
 
+T_FallingPiece piece_i = {{{0, 0}, {1, 0}, {2, 0}, {3, 0}},  1, 0};
 T_FallingPiece piece_o = {{{0, 0}, {1, 0}, {0, 1}, {1, 1}}, -1, 1};
-T_FallingPiece piece_i = {{{0, 0}, {1, 0}, {2, 0}, {3, 0}}, 1, 0};
-T_FallingPiece piece_s = {{{1, 0}, {1, 1}, {0, 1}, {0, 2}}, 0, 3};
-T_FallingPiece piece_z = {{{0, 0}, {0, 1}, {1, 1}, {1, 2}}, 2, 4};
-T_FallingPiece piece_l = {{{0, 0}, {1, 0}, {2, 0}, {2, 1}}, 0, 6};
-T_FallingPiece piece_j = {{{2, 0}, {2, 1}, {1, 1}, {0, 1}}, 2, 2};
-T_FallingPiece piece_a = {{{0, 0}, {0, 1}, {1, 1}, {0, 2}}, 1, 5};
+T_FallingPiece piece_j = {{{2, 0}, {2, 1}, {1, 1}, {0, 1}},  2, 2};
+T_FallingPiece piece_s = {{{1, 0}, {1, 1}, {0, 1}, {0, 2}},  0, 3};
+T_FallingPiece piece_z = {{{0, 0}, {0, 1}, {1, 1}, {1, 2}},  2, 4};
+T_FallingPiece piece_a = {{{0, 0}, {0, 1}, {1, 1}, {0, 2}},  1, 5};
+T_FallingPiece piece_l = {{{0, 0}, {1, 0}, {2, 0}, {2, 1}},  0, 6};
 
 T_FallingPiece falling_piece;
 T_FallingPiece piece_next;
@@ -70,18 +68,18 @@ void board_clear() {
 void board_render(SDL_Renderer *renderer) {
     for (int y = 0; y < ROWS; y++) {
         for (int x = 0; x < COLUMNS; x++) {
-            g_r.x = x*BLOCK_SIZE + BOARD_X;
-            g_r.y = y*BLOCK_SIZE;
-            b_r.x = g_r.x + 2;
-            b_r.y = g_r.y + 2;
+            rect_grid.x = x*BLOCK_SIZE + BOARD_X;
+            rect_grid.y = y*BLOCK_SIZE;
+            rect_block.x = rect_grid.x + 2;
+            rect_block.y = rect_grid.y + 2;
 
             SDL_SetRenderDrawColor(renderer, 0x80, 0x80, 0x80, 0x80);
-            SDL_RenderDrawRect(renderer, &g_r);
+            SDL_RenderDrawRect(renderer, &rect_grid);
 
              if (game_board[y][x] != -1) {
                 SDL_Color color = COLORS[game_board[y][x]];
                 SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-                SDL_RenderFillRect(renderer, &b_r);
+                SDL_RenderFillRect(renderer, &rect_block);
              }
         }
     }
@@ -216,12 +214,12 @@ void falling_piece_render(SDL_Renderer *renderer, T_FallingPiece *falling_piece,
             x += 13;
         }
 
-        b_r.y = y*BLOCK_SIZE + 2;
-        b_r.x = x*BLOCK_SIZE + BOARD_X + 2;
+        rect_block.y = y*BLOCK_SIZE + 2;
+        rect_block.x = x*BLOCK_SIZE + BOARD_X + 2;
         
         SDL_Color color = COLORS[falling_piece->color];
         SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-        SDL_RenderFillRect(renderer, &b_r);
+        SDL_RenderFillRect(renderer, &rect_block);
     }
 }
 
@@ -235,7 +233,7 @@ void falling_piece_land() {
     board_check_rows();
 }
 
-void falling_piece_update(int num_keys, const bool *key_state) {
+void falling_piece_update(const bool *key_state) {
     int falling = 1;
     int dx = 0;
     int dy = 0;
@@ -310,7 +308,6 @@ void game_render(SDL_Renderer *renderer) {
     if (game_paused) {
         text_render(&text_paused, renderer);
         button_render(&btn_resume, renderer);
-        button_render(&btn_leave, renderer);
     }
     else {
         if (score_changed) 
@@ -326,21 +323,27 @@ void game_render(SDL_Renderer *renderer) {
         if (game_over)
             text_render(&text_game_over, renderer);
     }
+    
+    if (game_paused || game_over) {
+        button_render(&btn_leave, renderer);
+    }
 }
 
-void game_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_last, int x, int y, int num_keys, const bool *key_state) {
+void game_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_last, int x, int y, const bool *key_state) {
     if (game_paused) {
-        button_update(&btn_leave, mouse_state, mouse_state_last, x, y);
-        if (btn_leave.state & BUTTON_PRESSED)
-            *next_state = STATE_MENU;
-
         button_update(&btn_resume, mouse_state, mouse_state_last, x, y);
         if (btn_resume.state & BUTTON_PRESSED)
             game_paused = false;
     }
     else {
         if (!game_over)
-            falling_piece_update(num_keys, key_state);
+            falling_piece_update(key_state);
+    }
+
+    if (game_paused || game_over) {
+        button_update(&btn_leave, mouse_state, mouse_state_last, x, y);
+        if (btn_leave.state & BUTTON_PRESSED)
+            *next_state = STATE_MENU;
     }
 }
 
@@ -386,10 +389,10 @@ void game_init(SDL_Renderer *renderer) {
 
     score_text_update(renderer);
 
-    g_r.w = BLOCK_SIZE+1;
-    g_r.h = BLOCK_SIZE+1;
-    b_r.w = BLOCK_SIZE-3;
-    b_r.h = BLOCK_SIZE-3;
+    rect_grid.w = BLOCK_SIZE+1;
+    rect_grid.h = BLOCK_SIZE+1;
+    rect_block.w = BLOCK_SIZE-3;
+    rect_block.h = BLOCK_SIZE-3;
 }
 
 void game_destroy() {

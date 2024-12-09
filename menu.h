@@ -3,12 +3,8 @@
 
 #include "tetris.h"
 #include "button.h"
-#include "sdl2/SDL.h"
 
-T_Text text_title;
-T_Text text_info;
-T_Button btn_play;
-T_Button btn_quit;
+#include "sdl2/SDL.h"
 
 void menu_init(SDL_Renderer *renderer);
 void menu_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_last, int x, int y);

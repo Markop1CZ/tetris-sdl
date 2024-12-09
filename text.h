@@ -9,10 +9,10 @@ typedef struct {
     SDL_Rect rect;
 } T_Text;
 
-TTF_Font *font_title;
-TTF_Font *font_button;
-TTF_Font *font_text;
-TTF_Font *font_score;
+extern TTF_Font *font_title;
+extern TTF_Font *font_button;
+extern TTF_Font *font_text;
+extern TTF_Font *font_score;
 
 void text_load_fonts();
 void text_destroy_fonts();

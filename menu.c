@@ -1,10 +1,17 @@
 #include "menu.h"
+
 #include "tetris.h"
 #include "button.h"
 #include "game.h"
+#include "text.h"
 
 #include "sdl2/SDL.h"
 #include "sdl2/SDL_mouse.h"
+
+T_Text text_title;
+T_Text text_info;
+T_Button btn_play;
+T_Button btn_quit;
 
 void menu_init(SDL_Renderer *renderer) {
     text_create(&text_title, renderer, font_title, "Tetris", white);

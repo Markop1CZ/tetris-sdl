@@ -20,8 +20,8 @@ enum state {
     STATE_GAME,
 };
 
-SDL_Color alpha;
-SDL_Color white;
-SDL_Color black;
+extern SDL_Color alpha;
+extern SDL_Color white;
+extern SDL_Color black;
 
 #endif /* TETRIS_H */

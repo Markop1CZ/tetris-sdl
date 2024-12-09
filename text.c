@@ -4,6 +4,11 @@
 #include "sdl2/SDL.h"
 #include "sdl2/SDL_ttf.h"
 
+TTF_Font *font_title;
+TTF_Font *font_button;
+TTF_Font *font_text;
+TTF_Font *font_score;
+
 void text_load_fonts() {
     TTF_Init();
 
@@ -18,13 +23,12 @@ void text_destroy_fonts() {
     TTF_CloseFont(font_button);
     TTF_CloseFont(font_text);
     TTF_CloseFont(font_score);
+    TTF_Quit();
 }
 
 void text_create(T_Text *text, SDL_Renderer *renderer, TTF_Font *font, const char *text_string, SDL_Color color) {
     text->surface = TTF_RenderText_Blended(font, text_string, color);
     text->texture = SDL_CreateTextureFromSurface(renderer, text->surface);
-
-    //SDL_SetTextureBlendMode(text->texture, SDL_BLENDMODE_BLEND);
 
     text->rect.x = (int) (WIDTH-text->surface->w)/2;
     text->rect.y = 0;

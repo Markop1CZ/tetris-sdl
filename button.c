@@ -1,5 +1,6 @@
-#include <stdio.h>
 #include "button.h"
+
+#include <stdio.h>
 #include "tetris.h"
 #include "text.h"
 
