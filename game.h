@@ -12,7 +12,8 @@
 #define BOARD_X 75
 #define SCORE_CLEAR 100
 #define SCORE_MULTIPLIER 1.25f
-#define FALL_DURATION 0.5f
+#define FALL_DELAY 500
+#define INPUT_DELAY 35
 
 void game_init(SDL_Renderer *renderer);
 void game_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_last, int x, int y, const bool *key_state);

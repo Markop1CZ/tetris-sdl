@@ -17,6 +17,7 @@
 #include "sdl2/SDL.h"
 #include "sdl2/SDL_events.h"
 #include "sdl2/SDL_scancode.h"
+#include "sdl2/SDL_timer.h"
 
 T_Button btn_leave;
 T_Button btn_resume;
@@ -57,9 +58,12 @@ bool game_over = false;
 bool score_changed;
 
 int score = 0;
-int time_fall = 0;
 int time_move = 0;
 int game_board[ROWS][COLUMNS];
+
+long time_next_fall = 0;
+long time_next_move = 0;
+bool input_held_last = false;
 
 void board_clear() {
     for (int y = 0; y < ROWS; y++) {
@@ -243,31 +247,45 @@ void falling_piece_land() {
     board_check_rows();
 }
 
+// TODO: tweak input timings
 void falling_piece_update(const bool *key_state) {
     int falling = 1;
     int dx = 0;
     int dy = 0;
 
-    // move down every 0.5 seconds
-    if (++time_fall >= (int)TARGET_FPS/2) {
+    long time = SDL_GetTicks64();
+
+    if (time >= time_next_fall) {
         dy = 1;
-        time_fall = 0;
+        time_next_fall = time + FALL_DELAY;
     }
 
-    // get input every 0.25 seconds
-    if (++time_move >= (int)TARGET_FPS/16) {
-        if (key_state[SDL_SCANCODE_RIGHT]) {
-            dx = 1;
-        }
-        if (key_state[SDL_SCANCODE_LEFT]) {
+    bool input_held = (key_state[SDL_SCANCODE_LEFT] || key_state[SDL_SCANCODE_RIGHT] || key_state[SDL_SCANCODE_DOWN] ||
+                       key_state[SDL_SCANCODE_KP_4] || key_state[SDL_SCANCODE_KP_6] || key_state[SDL_SCANCODE_KP_5]);
+
+    if (time >= time_next_move || (input_held && !(input_held_last))) {
+        if (key_state[SDL_SCANCODE_LEFT] || key_state[SDL_SCANCODE_KP_4]) {
             dx = -1;
         }
-        if (key_state[SDL_SCANCODE_DOWN]) {
+        if (key_state[SDL_SCANCODE_RIGHT] || key_state[SDL_SCANCODE_KP_6]) {
+            dx = 1;
+        }
+        if (key_state[SDL_SCANCODE_DOWN] || key_state[SDL_SCANCODE_KP_5]) {
             dy = 1;
         }
 
-        time_move = 0;
+        time_next_move = time + INPUT_DELAY;
+
+        if (!(input_held_last))
+            time_next_move += 35;
+
+        long td = time_next_fall - time_next_move;
+        if (td > 0 && td < 10) {
+            time_next_move = time_next_fall;
+        }
     }
+
+    input_held_last = input_held;
 
     // check x
     for (int i = 0; i < 4; i++) {
@@ -364,7 +382,7 @@ void game_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_
 
 void game_keydown(SDL_KeyboardEvent key) {
     if (!game_paused) {
-        if (key.keysym.scancode == SDL_SCANCODE_R && !(key.repeat)) {
+        if ((key.keysym.scancode == SDL_SCANCODE_R || key.keysym.scancode == SDL_SCANCODE_UP || key.keysym.scancode == SDL_SCANCODE_KP_8) && !(key.repeat)) {
             falling_piece_rotate();
         }
     }
@@ -384,6 +402,9 @@ void game_reset() {
     game_paused = false;
     board_clear();
     falling_piece_spawn();
+
+    time_next_fall = SDL_GetTicks64() + FALL_DELAY;
+    time_next_move = 0;
 
     #ifdef EMSCRIPTEN
     emscripten_run_script("gameStarted();");
