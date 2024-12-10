@@ -247,7 +247,7 @@ void falling_piece_land() {
     board_check_rows();
 }
 
-// TODO: tweak input timings
+// TODO: FPS throttling is bad, movement needs to be multiplied by timedelta (key repeat logic???)
 void falling_piece_update(const bool *key_state) {
     int falling = 1;
     int dx = 0;

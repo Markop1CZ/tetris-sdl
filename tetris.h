@@ -3,7 +3,7 @@
 
 #include "sdl2/SDL.h"
 
-#define TARGET_FPS 60
+#define TARGET_FPS 100
 #define BLOCK_SIZE 32
 #define ROWS 20
 #define COLUMNS 10
