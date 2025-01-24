@@ -1,7 +1,7 @@
 #ifndef TETRIS_H
 #define TETRIS_H
 
-#include "sdl2/SDL.h"
+#include "SDL2/SDL.h"
 
 #define TARGET_FPS 100
 #define BLOCK_SIZE 32

@@ -4,10 +4,10 @@
 #include "tetris.h"
 #include "text.h"
 
-#include "sdl2/SDL.h"
-#include "sdl2/SDL_mouse.h"
-#include "sdl2/SDL_ttf.h"
-#include "sdl2/SDL_rect.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_mouse.h"
+#include "SDL2/SDL_ttf.h"
+#include "SDL2/SDL_rect.h"
 
 void button_create(T_Button *button, SDL_Renderer *renderer, TTF_Font *font, const char *text_string) {
     text_create(&button->text, renderer, font, text_string, black);

@@ -14,10 +14,10 @@
 #include "tetris.h"
 #include "button.h"
 
-#include "sdl2/SDL.h"
-#include "sdl2/SDL_events.h"
-#include "sdl2/SDL_scancode.h"
-#include "sdl2/SDL_timer.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_events.h"
+#include "SDL2/SDL_scancode.h"
+#include "SDL2/SDL_timer.h"
 
 T_Button btn_leave;
 T_Button btn_resume;

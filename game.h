@@ -6,8 +6,8 @@
 #include "tetris.h"
 #include "button.h"
 
-#include "sdl2/SDL.h"
-#include "sdl2/SDL_events.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_events.h"
 
 #define BOARD_X 75
 #define SCORE_CLEAR 100

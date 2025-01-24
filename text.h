@@ -1,7 +1,7 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-#include "sdl2/SDL_ttf.h"
+#include "SDL2/SDL_ttf.h"
 
 typedef struct {
     SDL_Surface *surface;

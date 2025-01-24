@@ -2,7 +2,7 @@
 #define BUTTON_H
 
 #include "text.h"
-#include "sdl2/SDL_ttf.h"
+#include "SDL2/SDL_ttf.h"
 
 #define BUTTON_HOVER 1
 #define BUTTON_PRESSED 2

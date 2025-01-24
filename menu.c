@@ -5,8 +5,8 @@
 #include "game.h"
 #include "text.h"
 
-#include "sdl2/SDL.h"
-#include "sdl2/SDL_mouse.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_mouse.h"
 
 T_Text text_title;
 T_Text text_info;

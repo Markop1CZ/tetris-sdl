@@ -13,9 +13,9 @@
 #include "text.h"
 #include "button.h"
 
-#include "sdl2/SDL.h"
-#include "sdl2/SDL_mouse.h"
-#include "sdl2/SDL_ttf.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_mouse.h"
+#include "SDL2/SDL_ttf.h"
 
 SDL_Color alpha = {0x00, 0x00, 0x00, 0x00};
 SDL_Color white = {0xFF, 0xFF, 0xFF, 0xFF};

@@ -1,8 +1,8 @@
 #include "text.h"
 #include "tetris.h"
 
-#include "sdl2/SDL.h"
-#include "sdl2/SDL_ttf.h"
+#include "SDL2/SDL.h"
+#include "SDL2/SDL_ttf.h"
 
 TTF_Font *font_title;
 TTF_Font *font_button;
