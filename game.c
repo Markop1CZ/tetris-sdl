@@ -61,8 +61,9 @@ int score = 0;
 int time_move = 0;
 int game_board[ROWS][COLUMNS];
 
-long time_next_fall = 0;
-long time_next_move = 0;
+long time_paused;
+long time_last_fall;
+long time_last_move;
 bool input_held_last = false;
 
 void board_clear() {
@@ -102,6 +103,11 @@ void board_clear_row(int y) {
         for (int x = 0; x < COLUMNS; x++) {
             game_board[j][x] = game_board[j-1][x];
         }
+    }
+
+    //comment out to get back epic bug
+    for (int x = 0; x < COLUMNS; x++) {
+        game_board[0][x] = -1;
     }
 }
 
@@ -247,42 +253,40 @@ void falling_piece_land() {
     board_check_rows();
 }
 
-// TODO: FPS throttling is bad, movement needs to be multiplied by timedelta (key repeat logic???)
 void falling_piece_update(const bool *key_state) {
-    int falling = 1;
     int dx = 0;
     int dy = 0;
 
     long time = SDL_GetTicks64();
-
-    if (time >= time_next_fall) {
-        dy = 1;
-        time_next_fall = time + FALL_DELAY;
-    }
-
     bool input_held = (key_state[SDL_SCANCODE_LEFT] || key_state[SDL_SCANCODE_RIGHT] || key_state[SDL_SCANCODE_DOWN] ||
                        key_state[SDL_SCANCODE_KP_4] || key_state[SDL_SCANCODE_KP_6] || key_state[SDL_SCANCODE_KP_5]);
 
-    if (time >= time_next_move || (input_held && !(input_held_last))) {
+    if (time-time_last_fall >= FALL_DELAY) {
+        long delta = time-time_last_fall;
+        int n = (int) delta/FALL_DELAY;
+
+        dy = n;
+        time_last_fall = time;
+    }
+
+    if (time-time_last_move >= INPUT_DELAY || (input_held && !(input_held_last))) {
+        long delta = time-time_last_move;
+        int n = (int) delta/INPUT_DELAY;
+
         if (key_state[SDL_SCANCODE_LEFT] || key_state[SDL_SCANCODE_KP_4]) {
-            dx = -1;
+            dx = -n;
         }
         if (key_state[SDL_SCANCODE_RIGHT] || key_state[SDL_SCANCODE_KP_6]) {
-            dx = 1;
+            dx = n;
         }
         if (key_state[SDL_SCANCODE_DOWN] || key_state[SDL_SCANCODE_KP_5]) {
-            dy = 1;
+            dy = n;
         }
 
-        time_next_move = time + INPUT_DELAY;
+        time_last_move = time;
 
         if (!(input_held_last))
-            time_next_move += 35;
-
-        long td = time_next_fall - time_next_move;
-        if (td > 0 && td < 10) {
-            time_next_move = time_next_fall;
-        }
+            time_last_move += 10; // short delay for key repeat
     }
 
     input_held_last = input_held;
@@ -298,7 +302,7 @@ void falling_piece_update(const bool *key_state) {
         }
     }
 
-    // check if can fall/move
+    // check y
     for (int i = 0; i < 4; i++) {
         int p_y = falling_piece.coords[i][0];
         int p_x = falling_piece.coords[i][1];
@@ -306,20 +310,16 @@ void falling_piece_update(const bool *key_state) {
         int next_x = p_x+dx;
         int next_y = p_y+dy;
 
-        if (next_y >= ROWS || game_board[next_y][next_x] != -1)
-            falling = 0;
+        if (next_y >= ROWS || game_board[next_y][next_x] != -1) {
+            falling_piece_land();
+            falling_piece_spawn();
+            return;
+        }
+            
     }
-
-    // fell
-    if (!falling) {
-        falling_piece_land();
-        falling_piece_spawn();
-        return;
-    }
-
-    // update movement
+    
     falling_piece_transform(dy, dx);
-}
+}   
 
 void score_text_update(SDL_Renderer *renderer) {
     text_destroy(&text_score);
@@ -391,6 +391,13 @@ void game_keydown(SDL_KeyboardEvent key) {
         game_paused = !(game_paused);
         if (game_over)
             game_paused = false;
+
+        if (game_paused)
+            time_paused = SDL_GetTicks64();
+        else {
+            time_last_fall += SDL_GetTicks64()-time_paused; // compensate for time paused
+            time_last_move += SDL_GetTicks64()-time_paused;
+        }
     }
 }
 
@@ -403,8 +410,8 @@ void game_reset() {
     board_clear();
     falling_piece_spawn();
 
-    time_next_fall = SDL_GetTicks64() + FALL_DELAY;
-    time_next_move = 0;
+    time_last_fall = SDL_GetTicks64();
+    time_last_move = SDL_GetTicks64();
 
     #ifdef EMSCRIPTEN
     emscripten_run_script("gameStarted();");
