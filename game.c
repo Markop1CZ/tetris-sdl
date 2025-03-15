@@ -319,7 +319,18 @@ void falling_piece_update(const bool *key_state) {
     }
     
     falling_piece_transform(dy, dx);
-}   
+}
+
+void game_pause_toggle() {
+    game_paused = !(game_paused);
+
+    if (game_paused)
+        time_paused = SDL_GetTicks64();
+    else {
+        time_last_fall += SDL_GetTicks64()-time_paused;
+        time_last_move += SDL_GetTicks64()-time_paused;
+    }
+}
 
 void score_text_update(SDL_Renderer *renderer) {
     text_destroy(&text_score);
@@ -361,7 +372,7 @@ void game_update(enum state *next_state, Uint32 mouse_state, Uint32 mouse_state_
     if (game_paused) {
         button_update(&btn_resume, mouse_state, mouse_state_last, x, y);
         if (btn_resume.state & BUTTON_PRESSED)
-            game_paused = false;
+            game_pause_toggle();
     }
     else {
         if (!game_over)
@@ -388,16 +399,7 @@ void game_keydown(SDL_KeyboardEvent key) {
     }
 
     if (key.keysym.scancode == SDL_SCANCODE_ESCAPE && !(key.repeat)) {
-        game_paused = !(game_paused);
-        if (game_over)
-            game_paused = false;
-
-        if (game_paused)
-            time_paused = SDL_GetTicks64();
-        else {
-            time_last_fall += SDL_GetTicks64()-time_paused; // compensate for time paused
-            time_last_move += SDL_GetTicks64()-time_paused;
-        }
+        game_pause_toggle();
     }
 }
 

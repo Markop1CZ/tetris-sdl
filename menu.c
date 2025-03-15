@@ -31,6 +31,8 @@ void menu_init(SDL_Renderer *renderer) {
 }
 
 void menu_destroy() {
+    text_destroy(&text_title);
+    text_destroy(&text_info);
     button_destroy(&btn_play);
     button_destroy(&btn_quit);
 }
